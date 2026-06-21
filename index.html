@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caderno de Revisão — Painel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --paper: #f6f1e7;
+    --paper-line: #e3d9c6;
+    --ink: #2b2622;
+    --ink-soft: #6b6055;
+    --red-pen: #a8362a;
+    --green-pen: #3f6b4f;
+    --gold: #b5862b;
+    --margin-red: #c8736a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 2.1rem;
+  }
+
+  .margin-rule {
+    position: fixed;
+    top: 0; bottom: 0;
+    left: 64px;
+    width: 1px;
+    background: var(--margin-red);
+    opacity: 0.35;
+    z-index: 0;
+  }
+
+  header {
+    padding: 2.5rem 2rem 1.5rem 5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--red-pen);
+    margin-bottom: 0.4rem;
+  }
+
+  h1 {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 700;
+    font-size: 2.1rem;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    margin-top: 0.4rem;
+    max-width: 60ch;
+  }
+
+  main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem 5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* LOADING / ERROR */
+  .state-box {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--ink-soft);
+  }
+  .state-box .icon { font-size: 2rem; margin-bottom: 1rem; }
+
+  /* STAT CARDS */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .stat-card {
+    background: #fffdf8;
+    border: 1px solid var(--paper-line);
+    border-radius: 4px;
+    padding: 1.2rem 1.4rem;
+    box-shadow: 2px 2px 0 rgba(43,38,34,0.05);
+  }
+
+  .stat-num {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 700;
+    font-size: 2.2rem;
+    line-height: 1;
+  }
+
+  .stat-num.red { color: var(--red-pen); }
+  .stat-num.gold { color: var(--gold); }
+  .stat-num.green { color: var(--green-pen); }
+
+  .stat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--ink-soft);
+    margin-top: 0.3rem;
+  }
+
+  /* SECTION */
+  .section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 2.5rem 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--paper-line);
+  }
+
+  /* BAR CHART (disciplinas) */
+  .chart-card {
+    background: #fffdf8;
+    border: 1px solid var(--paper-line);
+    border-radius: 4px;
+    padding: 1.5rem;
+    box-shadow: 2px 2px 0 rgba(43,38,34,0.05);
+  }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 70px;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px dashed var(--paper-line);
+  }
+  .bar-row:last-child { border-bottom: none; }
+
+  .bar-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .bar-track {
+    height: 14px;
+    background: var(--paper);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(.22,1,.36,1);
+  }
+
+  .bar-fill.errei { background: var(--red-pen); }
+  .bar-fill.favorita { background: var(--gold); }
+
+  .bar-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+
+  /* TIMELINE */
+  .timeline-card {
+    background: #fffdf8;
+    border: 1px solid var(--paper-line);
+    border-radius: 4px;
+    padding: 1.5rem;
+    box-shadow: 2px 2px 0 rgba(43,38,34,0.05);
+  }
+
+  .timeline-svg-wrap { width: 100%; overflow-x: auto; }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    flex-wrap: wrap;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .legend .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* RECENT LIST */
+  .recent-list { display: flex; flex-direction: column; gap: 0.7rem; }
+
+  .recent-item {
+    background: #fffdf8;
+    border: 1px solid var(--paper-line);
+    border-left: 3px solid var(--red-pen);
+    border-radius: 0 4px 4px 0;
+    padding: 0.85rem 1.1rem;
+    box-shadow: 1px 1px 0 rgba(43,38,34,0.04);
+  }
+  .recent-item.favorita { border-left-color: var(--gold); }
+
+  .recent-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .recent-disc {
+    font-weight: 600;
+    font-size: 0.88rem;
+  }
+
+  .recent-assunto {
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+  }
+
+  .recent-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  /* CONFIG PANEL */
+  .config-panel {
+    background: #fffdf8;
+    border: 1px solid var(--paper-line);
+    border-radius: 4px;
+    padding: 1.5rem;
+    max-width: 480px;
+    margin: 3rem auto;
+    box-shadow: 2px 2px 0 rgba(43,38,34,0.05);
+  }
+  .config-panel label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--ink-soft);
+    margin-bottom: 0.4rem;
+    margin-top: 1rem;
+  }
+  .config-panel label:first-child { margin-top: 0; }
+  .config-panel input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--paper-line);
+    border-radius: 3px;
+    background: var(--paper);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--ink);
+  }
+  .config-panel button {
+    margin-top: 1.4rem;
+    width: 100%;
+    padding: 0.7rem;
+    background: var(--red-pen);
+    color: var(--paper);
+    border: none;
+    border-radius: 3px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+  .config-panel button:hover { opacity: 0.9; }
+  .config-note {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin-top: 0.8rem;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 2rem 1.2rem 1.2rem 3.2rem; }
+    main { padding: 0 1.2rem 3rem 3.2rem; }
+    .margin-rule { left: 36px; }
+    .bar-row { grid-template-columns: 110px 1fr 50px; gap: 0.5rem; }
+    h1 { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="margin-rule"></div>
+
+<header>
+  <div class="eyebrow">Questão Mestre</div>
+  <h1>Caderno de Revisão</h1>
+  <p class="subtitle" id="subtitle">Seu desempenho consolidado, direto do banco de questões.</p>
+</header>
+
+<main id="mainContent">
+  <div class="state-box" id="loadingState">
+    <div class="icon">📖</div>
+    <p>Carregando suas questões...</p>
+  </div>
+</main>
+
+<script>
+const SUPABASE_URL_KEY = 'qm_supabase_url';
+const SUPABASE_ANON_KEY = 'qm_supabase_key';
+const TELEGRAM_ID_KEY = 'qm_telegram_id';
+
+function getConfig() {
+  return {
+    url: localStorage.getItem(SUPABASE_URL_KEY) || '',
+    key: localStorage.getItem(SUPABASE_ANON_KEY) || '',
+    telegramId: localStorage.getItem(TELEGRAM_ID_KEY) || ''
+  };
+}
+
+function saveConfig(url, key, telegramId) {
+  localStorage.setItem(SUPABASE_URL_KEY, url);
+  localStorage.setItem(SUPABASE_ANON_KEY, key);
+  localStorage.setItem(TELEGRAM_ID_KEY, telegramId);
+}
+
+function renderConfigForm(prefill = {}) {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div class="config-panel">
+      <p style="font-size:0.85rem; color:var(--ink-soft); line-height:1.6; margin-bottom:0.5rem;">
+        No Telegram, manda <strong>/exportar</strong> para o bot. Ele te devolve um texto — copia tudo e cola aqui embaixo.
+      </p>
+      <label>Dados exportados do bot</label>
+      <input id="cfgData" placeholder='[{"tipo":"errei","disciplina":"..."}]' value="">
+      <button onclick="handleSaveConfig()">Carregar meu caderno →</button>
+      <p class="config-note">💡 Os dados ficam salvos só neste navegador. Sempre que quiser atualizar o painel, manda /exportar de novo e repete esse processo.</p>
+    </div>
+  `;
+}
+
+function handleSaveConfig() {
+  const raw = document.getElementById('cfgData').value.trim();
+  if (!raw) {
+    alert('Cola o texto que o bot te mandou no /exportar.');
+    return;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    alert('Não consegui ler esse texto. Confere se copiou tudo certinho, sem cortar nada.');
+    return;
+  }
+  localStorage.setItem('qm_dados_exportados', raw);
+  renderDashboard(parsed);
+}
+
+async function loadDashboard() {
+  const saved = localStorage.getItem('qm_dados_exportados');
+  if (!saved) {
+    renderConfigForm();
+    return;
+  }
+  try {
+    const parsed = JSON.parse(saved);
+    renderDashboard(parsed);
+  } catch (e) {
+    renderConfigForm();
+  }
+}
+
+function renderDashboard(questoes) {
+  const main = document.getElementById('mainContent');
+
+  if (!questoes.length) {
+    main.innerHTML = `
+      <div class="state-box">
+        <div class="icon">📭</div>
+        <p>Nenhuma questão salva ainda. Manda um print pro bot no Telegram para começar!</p>
+        <p style="margin-top:1rem;"><a href="#" onclick="renderConfigForm(); return false;" style="color:var(--red-pen);">Trocar configuração</a></p>
+      </div>
+    `;
+    return;
+  }
+
+  const total = questoes.length;
+  const erros = questoes.filter(q => q.tipo === 'errei').length;
+  const favoritas = questoes.filter(q => q.tipo === 'favorita').length;
+
+  // Por disciplina
+  const discMap = {};
+  questoes.forEach(q => {
+    if (!discMap[q.disciplina]) discMap[q.disciplina] = { errei: 0, favorita: 0, total: 0 };
+    discMap[q.disciplina][q.tipo] = (discMap[q.disciplina][q.tipo] || 0) + 1;
+    discMap[q.disciplina].total++;
+  });
+  const discArr = Object.entries(discMap).sort((a, b) => b[1].total - a[1].total);
+  const maxDiscTotal = discArr[0]?.[1].total || 1;
+
+  // Timeline por semana (últimas 8 semanas)
+  const now = new Date();
+  const weeks = [];
+  for (let i = 7; i >= 0; i--) {
+    const start = new Date(now);
+    start.setDate(now.getDate() - i * 7 - now.getDay());
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 7);
+    weeks.push({ start, end, count: 0 });
+  }
+  questoes.forEach(q => {
+    const d = new Date(q.created_at);
+    for (const w of weeks) {
+      if (d >= w.start && d < w.end) { w.count++; break; }
+    }
+  });
+  const maxWeekCount = Math.max(...weeks.map(w => w.count), 1);
+
+  // Recentes
+  const recentes = questoes.slice(0, 6);
+
+  main.innerHTML = `
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-num">${total}</div>
+        <div class="stat-label">Questões no caderno</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num red">${erros}</div>
+        <div class="stat-label">Marcadas como erro</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num gold">${favoritas}</div>
+        <div class="stat-label">Favoritas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num green">${discArr.length}</div>
+        <div class="stat-label">Disciplinas tocadas</div>
+      </div>
+    </div>
+
+    <div class="section-title">Desempenho por disciplina</div>
+    <div class="chart-card">
+      ${discArr.map(([disc, d]) => `
+        <div class="bar-row">
+          <div class="bar-label" title="${disc}">${disc}</div>
+          <div class="bar-track">
+            <div style="display:flex; height:100%; width:${Math.round(d.total / maxDiscTotal * 100)}%;">
+              <div class="bar-fill errei" style="width:${d.total ? (d.errei/d.total*100) : 0}%"></div>
+              <div class="bar-fill favorita" style="width:${d.total ? (d.favorita/d.total*100) : 0}%"></div>
+            </div>
+          </div>
+          <div class="bar-count">${d.total}q</div>
+        </div>
+      `).join('')}
+      <div class="legend">
+        <span><span class="dot" style="background:var(--red-pen)"></span> Errei</span>
+        <span><span class="dot" style="background:var(--gold)"></span> Favorita</span>
+      </div>
+    </div>
+
+    <div class="section-title">Ritmo de revisão (últimas 8 semanas)</div>
+    <div class="timeline-card">
+      <div class="timeline-svg-wrap">
+        ${renderTimelineSVG(weeks, maxWeekCount)}
+      </div>
+    </div>
+
+    <div class="section-title">Últimas questões salvas</div>
+    <div class="recent-list">
+      ${recentes.map(q => `
+        <div class="recent-item ${q.tipo}">
+          <div class="recent-top">
+            <span class="recent-disc">${q.tipo === 'favorita' ? '⭐' : '❌'} ${q.disciplina}</span>
+            <span class="recent-date">${new Date(q.created_at).toLocaleDateString('pt-BR')}</span>
+          </div>
+          <div class="recent-assunto">${q.assunto}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <p style="margin-top:3rem; text-align:center;">
+      <a href="#" onclick="renderConfigForm(); return false;" style="color:var(--ink-soft); font-size:0.78rem;">Trocar configuração</a>
+    </p>
+  `;
+}
+
+function renderTimelineSVG(weeks, maxCount) {
+  const w = Math.max(weeks.length * 70, 500);
+  const h = 160;
+  const barW = 36;
+  const gap = (w - weeks.length * barW) / (weeks.length + 1);
+  const chartH = 100;
+  const baseY = 120;
+
+  let bars = '';
+  weeks.forEach((week, i) => {
+    const x = gap + i * (barW + gap);
+    const barH = week.count > 0 ? Math.max((week.count / maxCount) * chartH, 4) : 0;
+    const y = baseY - barH;
+    const label = `${week.start.getDate()}/${week.start.getMonth() + 1}`;
+    bars += `
+      <rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="2" fill="#a8362a" opacity="${week.count > 0 ? 0.85 : 0.15}"/>
+      ${week.count > 0 ? `<text x="${x + barW/2}" y="${y - 6}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#2b2622">${week.count}</text>` : ''}
+      <text x="${x + barW/2}" y="${baseY + 16}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" fill="#6b6055">${label}</text>
+    `;
+  });
+
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+    <line x1="0" y1="${baseY}" x2="${w}" y2="${baseY}" stroke="#e3d9c6" stroke-width="1"/>
+    ${bars}
+  </svg>`;
+}
+
+loadDashboard();
+</script>
+
+</body>
+</html>
